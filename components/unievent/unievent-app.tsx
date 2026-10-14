@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useTheme } from 'next-themes'
 import { QRCodeSVG } from 'qrcode.react'
 import {
@@ -26,10 +26,10 @@ type EventItem = { id: number; title: string; titleEn: string; category: string;
 type Toast = (message: string) => void
 
 const events: EventItem[] = [
-  { id: 1, title: 'ملتقى الابتكار وريادة الأعمال', titleEn: 'Innovation & Entrepreneurship Forum', category: 'ريادة الأعمال', categoryEn: 'Entrepreneurship', date: 'الأربعاء، ٢٣ أكتوبر', dateEn: 'Wed, Oct 23', time: '١٠:٠٠ ص', place: 'مركز الابتكار — القاعة الرئيسية', placeEn: 'Innovation Center · Main Hall', capacity: 300, registered: 224, tone: 'indigo', icon: Lightbulb, recommended: true },
-  { id: 2, title: 'ليلة الأفلام في الحرم الجامعي', titleEn: 'Campus Movie Night', category: 'ثقافة وترفيه', categoryEn: 'Culture & Arts', date: 'الخميس، ٢٤ أكتوبر', dateEn: 'Thu, Oct 24', time: '٧:٣٠ م', place: 'الساحة الشمالية', placeEn: 'North Plaza', capacity: 180, registered: 112, tone: 'rose', icon: Video },
-  { id: 3, title: 'ورشة تصميم تجربة المستخدم', titleEn: 'UX Design Workshop', category: 'تقنية', categoryEn: 'Technology', date: 'السبت، ٢٦ أكتوبر', dateEn: 'Sat, Oct 26', time: '١:٠٠ م', place: 'مبنى علوم الحاسب — معمل ٣', placeEn: 'Computer Science · Lab 3', capacity: 40, registered: 34, tone: 'mint', icon: LayoutDashboard, recommended: true },
-  { id: 4, title: 'بطولة الجامعات لكرة السلة', titleEn: 'Inter-University Basketball', category: 'رياضة', categoryEn: 'Sports', date: 'الأحد، ٢٧ أكتوبر', dateEn: 'Sun, Oct 27', time: '٥:٠٠ م', place: 'الصالة الرياضية الكبرى', placeEn: 'University Sports Arena', capacity: 500, registered: 298, tone: 'amber', icon: Activity },
+  { id: 1, title: 'ملتقى الابتكار وريادة الأعمال', titleEn: 'Innovation & Entrepreneurship Forum', category: 'ريادة الأعمال', categoryEn: 'Entrepreneurship', date: 'الجمعة، ٢٣ أكتوبر', dateEn: 'Fri, Oct 23', time: '١٠:٠٠ ص', place: 'مركز الابتكار — القاعة الرئيسية', placeEn: 'Innovation Center · Main Hall', capacity: 300, registered: 224, tone: 'indigo', icon: Lightbulb, recommended: true },
+  { id: 2, title: 'ليلة الأفلام في الحرم الجامعي', titleEn: 'Campus Movie Night', category: 'ثقافة وترفيه', categoryEn: 'Culture & Arts', date: 'السبت، ٢٤ أكتوبر', dateEn: 'Sat, Oct 24', time: '٧:٣٠ م', place: 'الساحة الشمالية', placeEn: 'North Plaza', capacity: 180, registered: 112, tone: 'rose', icon: Video },
+  { id: 3, title: 'ورشة تصميم تجربة المستخدم', titleEn: 'UX Design Workshop', category: 'تقنية', categoryEn: 'Technology', date: 'الاثنين، ٢٦ أكتوبر', dateEn: 'Mon, Oct 26', time: '١:٠٠ م', place: 'مبنى علوم الحاسب — معمل ٣', placeEn: 'Computer Science · Lab 3', capacity: 40, registered: 34, tone: 'mint', icon: LayoutDashboard, recommended: true },
+  { id: 4, title: 'بطولة الجامعات لكرة السلة', titleEn: 'Inter-University Basketball', category: 'رياضة', categoryEn: 'Sports', date: 'الثلاثاء، ٢٧ أكتوبر', dateEn: 'Tue, Oct 27', time: '٥:٠٠ م', place: 'الصالة الرياضية الكبرى', placeEn: 'University Sports Arena', capacity: 500, registered: 298, tone: 'amber', icon: Activity },
 ]
 
 const copy: Record<Locale, Record<string, any>> = {
@@ -48,7 +48,7 @@ const copy: Record<Locale, Record<string, any>> = {
     language: 'English',
     notifications: 'الإشعارات',
     theme: 'تبديل المظهر',
-    today: 'الثلاثاء، ٢٢ أكتوبر ٢٠٢٦',
+    today: 'الخميس، ٢٢ أكتوبر ٢٠٢٦',
     greeting: 'أهلاً رغد',
     subtitle: 'اكتشفي التجارب التي تستحق أن تكون جزءاً منها.',
     heroEyebrow: 'مجتمعك الجامعي',
@@ -432,7 +432,7 @@ const copy: Record<Locale, Record<string, any>> = {
     numberCode: 'رقم التذكرة',
     copied: 'تم النسخ',
     invitationSent: 'تم إرسال الدعوة.',
-    confirmationLabel: 'تم تأكيد التسجيل',
+    confirmationLabel: 'تم تأكيد التس��يل',
     publisher: 'جامعة ��لنور',
     idLabel: 'الرقم الجامعي',
     searchResults: 'نتائج البحث',
@@ -598,7 +598,7 @@ const copy: Record<Locale, Record<string, any>> = {
     print: 'طباعة',
     idNumber: 'الرقم الجامعي',
     statAttendance: 'نسبة الحضور',
-    countNow: 'عدد المشاركين',
+    countNow: '��دد المشاركين',
     aiRecommendation: 'توصية ذكية',
     toastSaved: 'تم حفظ التعديلات.',
     online: 'متصل',
@@ -606,7 +606,7 @@ const copy: Record<Locale, Record<string, any>> = {
     pdf: 'تحميل الشهادة',
     answers: 'اسألي عن الفعاليات',
     signature: 'فريق UniEvent',
-    saveChanges: 'حفظ التغييرات',
+    saveChanges: 'حفظ التغييرا��',
     eventCount: 'فعالي��',
     popularEvents: 'الفعاليات الأعلى حضوراً',
     current: 'الحالي',
@@ -1116,7 +1116,7 @@ const copy: Record<Locale, Record<string, any>> = {
     content: 'المحتوى',
     teacher: 'المنظّمة',
     positivePercentage: '٩٢٪ من التقييمات إيجابية',
-    universityTeam: 'فريق الفعاليات',
+    universityTeam: 'ف��يق الفعاليات',
     map: 'الموق��',
     locationName: 'مركز الابتكار، المب��ى ٤',
     aiThinking: 'المساعد يكتب...',
@@ -1273,7 +1273,7 @@ const copy: Record<Locale, Record<string, any>> = {
     scannedAlready: 'تم استخدام هذه التذكرة بالفعل.',
     noQueueItems: 'لا توجد فعاليات بانتظار الاعتماد الآن.',
     declined: 'مرفوضة',
-    aiTip: 'توصيات ذكية حسب اهتماماتك',
+    aiTip: 'توصي��ت ذكية حسب اهتماماتك',
     navigationLabel: 'التنقل الرئيسي',
     certificateDesc: 'أصدري شهادات رقمية بعد تسجيل الحضور.',
     allCurrent: 'الفعاليات الحالية',
@@ -1306,7 +1306,7 @@ const copy: Record<Locale, Record<string, any>> = {
     language: 'العربية',
     notifications: 'Notifications',
     theme: 'Toggle theme',
-    today: 'Tuesday, October 22, 2026',
+    today: 'Thursday, October 22, 2026',
     greeting: 'Welcome, Raghad',
     subtitle: 'Discover experiences worth being a part of.',
     heroEyebrow: 'Your campus community',
@@ -2581,7 +2581,10 @@ const navigation: { id: View; icon: LucideIcon; key: string; role: 'student' | '
 
 export function UniEventApp() {
   const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [view, setView] = useState<View>('discover')
+
+  useEffect(() => setMounted(true), [])
   const [locale, setLocale] = useState<Locale>('ar')
   const [category, setCategory] = useState('all')
   const [search, setSearch] = useState('')
@@ -2633,8 +2636,9 @@ export function UniEventApp() {
     try {
       const answer = await requestAI('chat', prompt)
       setChatMessages((current) => [...current, { role: 'assistant', text: answer }])
-    } catch {
-      setChatMessages((current) => [...current, { role: 'assistant', text: ar ? t.aiError : 'The assistant is temporarily unavailable. Please try again.' }])
+    } catch (error) {
+      const reply = error instanceof Error ? error.message : t.aiError
+      setChatMessages((current) => [...current, { role: 'assistant', text: reply }])
     } finally { setChatLoading(false) }
   }
 
@@ -2655,7 +2659,7 @@ export function UniEventApp() {
     </aside>
     {mobileNav && <button className="sidebar-scrim" aria-label={t.close} onClick={() => setMobileNav(false)} />}
     <div className="main-column">
-      <header className="topbar"><div className="topbar-start"><button className="icon-button mobile-menu-button" onClick={() => setMobileNav((open) => !open)} aria-label={t.navigation}><Menu /></button><div className="breadcrumb"><span>UniEvent</span><ChevronLeft /><strong>{t[pageTitle?.key as keyof typeof t] ?? t.home}</strong></div></div><div className="topbar-actions"><label className="header-search"><Search /><input aria-label={t.search} placeholder={t.search} value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') navigate('discover') }} /></label><button className="icon-button" onClick={() => setLocale(ar ? 'en' : 'ar')} aria-label={t.language}><Languages /></button><button className="icon-button" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={t.theme}>{theme === 'dark' ? <Sun /> : <Moon />}</button><button className="icon-button notification-button" onClick={() => notify(t.notificationEmpty)} aria-label={t.notifications}><Bell /><span /></button><span className="topbar-divider" /><button className="topbar-profile" aria-label={t.myAccount}><span className="avatar avatar-small">ر</span><span className="profile-copy"><strong>{ar ? 'رغد أحمد' : 'Raghad Ahmed'}</strong><small>{t.studentRole}</small></span><ChevronDown /></button></div></header>
+      <header className="topbar"><div className="topbar-start"><button className="icon-button mobile-menu-button" onClick={() => setMobileNav((open) => !open)} aria-label={t.navigation}><Menu /></button><div className="breadcrumb"><span>UniEvent</span><ChevronLeft /><strong>{t[pageTitle?.key as keyof typeof t] ?? t.home}</strong></div></div><div className="topbar-actions"><label className="header-search"><Search /><input aria-label={t.search} placeholder={t.search} value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') navigate('discover') }} /></label><button className="icon-button" onClick={() => setLocale(ar ? 'en' : 'ar')} aria-label={t.language}><Languages /></button><button className="icon-button" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={t.theme}>{mounted && theme === 'dark' ? <Sun /> : <Moon />}</button><button className="icon-button notification-button" onClick={() => notify(t.notificationEmpty)} aria-label={t.notifications}><Bell /><span /></button><span className="topbar-divider" /><button className="topbar-profile" aria-label={t.myAccount}><span className="avatar avatar-small">ر</span><span className="profile-copy"><strong>{ar ? 'رغد أحمد' : 'Raghad Ahmed'}</strong><small>{t[role === 'student' ? 'studentRole' : role === 'organizer' ? 'organizerRole' : 'adminRole']}</small></span><ChevronDown /></button></div></header>
       <main className="main-content" id="main-content">
         {view === 'discover' && <HomePage t={t} ar={ar} search={search} setSearch={setSearch} category={category} setCategory={setCategory} found={filteredEvents} registered={registered} onSelect={setSelected} onRegister={registerEvent} onNavigate={navigate} />}
         {view === 'tickets' && <TicketsPage t={t} ar={ar} registered={registered} activeTab={ticketTab} setActiveTab={setTicketTab} onRate={setRatingEvent} onToast={notify} onBrowse={() => navigate('discover')} />}
@@ -2735,7 +2739,7 @@ function CreatePage({ t, ar, onToast, generate }: any) {
     if (!title.trim()) { setError(t.titleRequired); return }
     setLoading(true); setError('')
     try { setDescription(await generate(`${title}\nCategory: ${category}\nIdea: ${idea || 'A welcoming, practical university event.'}`)); onToast(t.descriptionGenerated) }
-    catch { setError(t.formError) } finally { setLoading(false) }
+    catch (error) { setError(error instanceof Error ? error.message : t.formError) } finally { setLoading(false) }
   }
   const continueStep = () => { if (!title.trim()) { setError(t.titleRequired); return } setError(''); setStep((current) => Math.min(2, current + 1)) }
   return <div className="page-stack"><PageHeader eyebrow={t.organizerTools} title={t.createTitle} description={t.createSubtitle} action={<button className="button-outline" onClick={() => onToast(t.draftSaved)}><Bookmark />{t.saveDraft}</button>} /><div className="wizard-shell"><div className="wizard-main"><div className="wizard-stepper" aria-label={`${t.step1}: ${step + 1} / 3`}>{steps.map((label, index) => <div key={label} className={`wizard-step ${step === index ? 'step-active' : step > index ? 'step-done' : ''}`}><span>{step > index ? <Check /> : `0${index + 1}`}</span><div><strong>{label}</strong><small>{ar ? `الخطوة 0${index + 1}` : `Step 0${index + 1}`}</small></div>{index < 2 && <i />}</div>)}</div><div className="wizard-form"><div className="wizard-form-heading"><div className="eyebrow"><span className="eyebrow-dot" />{ar ? `الخطوة 0${step + 1} من ٠٣` : `Step 0${step + 1} of 03`}</div><h2>{steps[step]}</h2><p>{t.draftInfo}</p></div>
@@ -2773,7 +2777,7 @@ function ApprovalsPage({ t, ar, onToast }: any) {
 const weeklyData = [{ name: 'الأحد', en: 'Sun', value: 182 },{ name: 'الاثنين', en: 'Mon', value: 236 },{ name: 'الثلاثاء', en: 'Tue', value: 198 },{ name: 'الأربعاء', en: 'Wed', value: 315 },{ name: 'الخميس', en: 'Thu', value: 267 },{ name: 'الجمعة', en: 'Fri', value: 158 },{ name: 'السبت', en: 'Sat', value: 224 }]
 const collegesData = [{ name:'الهندسة',en:'Engineering',value:420 },{ name:'علوم الحاسب',en:'Computer Sci.',value:365 },{ name:'إدارة الأعمال',en:'Business',value:290 },{ name:'العلوم',en:'Science',value:210 },{ name:'الآداب',en:'Arts',value:165 }]
 function AnalyticsPage({ t, ar }: any) {
-  return <div className="page-stack"><PageHeader eyebrow={t.adminTools} title={t.analyticsTitle} description={t.analyticsSubtitle} action={<button className="button-outline"><CalendarDays />{t.period}<ChevronDown /></button>} /><div className="analytics-stats"><Metric icon={CalendarCheck} label={t.totalEvents} value={ar ? '١٨' : '18'} change="+٢٤٪" /><Metric icon={Users} label={t.registeredStudents} value={ar ? '١٬٢٨٠' : '1,280'} change="+١٨٪" /><Metric icon={Activity} label={t.attendance} value={ar ? '٧٨٪' : '78%'} change="+١٢٪" /><div className="rating-stat-card"><span className="rating-stat-icon"><Star /></span><span>{t.satisfaction}</span><div><strong>4.8</strong><span>/5</span><span className="rating-stars"><Star /><Star /><Star /><Star /><Star /></span></div><small><TrendingUp />+0.3 {t.registrationTrend}</small></div></div><div className="charts-grid"><Card className="chart-card attendance-chart"><div className="chart-heading"><div><span className="eyebrow"><span className="eyebrow-dot" />{t.thisWeek}</span><h2>{t.weekly}</h2><p>{t.dataDemo}</p></div><button className="icon-button" aria-label={t.other}><MoreHorizontal /></button></div><div className="chart-legend"><i />{t.attendance}<span>{ar ? '١٬٥٨٠' : '1,580'} {t.registered}</span></div><div className="chart-canvas" dir="ltr"><ResponsiveContainer width="100%" height="100%"><BarChart data={weeklyData} margin={{ top: 12, right: 8, left: -22, bottom: 0 }}><CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="4 5" /><XAxis dataKey={ar ? 'name' : 'en'} axisLine={false} tickLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} dy={8} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} ticks={[0,100,200,300,400]} /><Tooltip cursor={{ fill: 'var(--chart-hover)' }} contentStyle={{ borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)', fontSize: 12 }} /><Bar dataKey="value" fill="#6366f1" radius={[5,5,0,0]} maxBarSize={30} /></BarChart></ResponsiveContainer></div></Card><Card className="chart-card college-chart"><div className="chart-heading"><div><span className="eyebrow"><span className="eyebrow-dot" />{t.college}</span><h2>{t.byCollege}</h2><p>{t.dataDemo}</p></div><button className="icon-button" aria-label={t.other}><MoreHorizontal /></button></div><div className="college-list">{collegesData.map((college,index) => <div className="college-row" key={college.name}><div className="college-label"><span className={`college-rank rank-${index+1}`}>{`0${index+1}`}</span><span>{ar ? college.name : college.en}</span><strong>{college.value}</strong></div><Progress value={college.value/4.5} className={`college-progress progress-${index+1}`} aria-label={`${college.name}: ${college.value}`} /></div>)}</div><div className="college-footnote"><TrendingUp /><span>{t.analyticsTip}</span></div></Card></div><section className="sentiment-section"><div className="sentiment-header"><span className="sentiment-icon"><Sparkles /></span><div><span className="eyebrow">{t.aiPowered}</span><h2>{t.sentiment}</h2><p>{t.analyticsFeedback}</p></div><Badge variant="secondary" className="positive-badge"><span />{t.positive}</Badge></div><div className="sentiment-metrics"><div className="sentiment-score"><span>{t.satisfaction}</span><strong>4.8<small>/5</small></strong><span className="rating-stars"><Star /><Star /><Star /><Star /><Star /></span><small>{t.sentimentText}</small></div><div className="sentiment-bars"><span>{t.overall}</span><div className="sentiment-bar-row"><span>{ar ? 'إيجابي' : 'Positive'}</span><div className="sentiment-track"><i style={{ width: '92%' }} /></div><strong>92%</strong></div><div className="sentiment-bar-row"><span>{ar ? 'محايد' : 'Neutral'}</span><div className="sentiment-track neutral-track"><i style={{ width: '6%' }} /></div><strong>6%</strong></div><div className="sentiment-bar-row"><span>{ar ? 'سلبي' : 'Negative'}</span><div className="sentiment-track negative-track"><i style={{ width: '2%' }} /></div><strong>2%</strong></div></div><div className="sentiment-insight"><span><Sparkles /></span><div><strong>{t.smartSummary}</strong><p>{t.analyticsTip}</p></div><ArrowLeft /></div></div></section><div className="analytics-footer"><span><ShieldCheck />{t.privacy}</span><span>{t.dataDemo}</span><button className="text-button">{t.report}<Download /></button></div></div>
+  return <div className="page-stack"><PageHeader eyebrow={t.adminTools} title={t.analyticsTitle} description={t.analyticsSubtitle} action={<button className="button-outline"><CalendarDays />{t.period}<ChevronDown /></button>} /><div className="analytics-stats"><Metric icon={CalendarCheck} label={t.totalEvents} value={ar ? '١٨' : '18'} change="+٢٤٪" /><Metric icon={Users} label={t.registeredStudents} value={ar ? '١٬٢٨٠' : '1,280'} change="+١٨٪" /><Metric icon={Activity} label={t.attendance} value={ar ? '٧٨٪' : '78%'} change="+١٢٪" /><div className="rating-stat-card"><span className="rating-stat-icon"><Star /></span><span>{t.satisfaction}</span><div><strong>4.8</strong><span>/5</span><span className="rating-stars"><Star /><Star /><Star /><Star /><Star /></span></div><small><TrendingUp />+0.3 {t.registrationTrend}</small></div></div><div className="charts-grid"><Card className="chart-card attendance-chart"><div className="chart-heading"><div><span className="eyebrow"><span className="eyebrow-dot" />{t.thisWeek}</span><h2>{t.weekly}</h2><p>{t.dataDemo}</p></div><button className="icon-button" aria-label={t.other}><MoreHorizontal /></button></div><div className="chart-legend"><i />{t.attendance}<span>{ar ? '١٬٥٨٠' : '1,580'} {t.registered}</span></div><div className="chart-canvas" dir="ltr"><ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 176 }}><BarChart data={weeklyData} margin={{ top: 12, right: 8, left: -22, bottom: 0 }}><CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="4 5" /><XAxis dataKey={ar ? 'name' : 'en'} axisLine={false} tickLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} dy={8} /><YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} ticks={[0,100,200,300,400]} /><Tooltip cursor={{ fill: 'var(--chart-hover)' }} contentStyle={{ borderRadius: 12, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)', fontSize: 12 }} /><Bar dataKey="value" fill="#6366f1" radius={[5,5,0,0]} maxBarSize={30} /></BarChart></ResponsiveContainer></div></Card><Card className="chart-card college-chart"><div className="chart-heading"><div><span className="eyebrow"><span className="eyebrow-dot" />{t.college}</span><h2>{t.byCollege}</h2><p>{t.dataDemo}</p></div><button className="icon-button" aria-label={t.other}><MoreHorizontal /></button></div><div className="college-list">{collegesData.map((college,index) => <div className="college-row" key={college.name}><div className="college-label"><span className={`college-rank rank-${index+1}`}>{`0${index+1}`}</span><span>{ar ? college.name : college.en}</span><strong>{college.value}</strong></div><Progress value={college.value/4.5} className={`college-progress progress-${index+1}`} aria-label={`${college.name}: ${college.value}`} /></div>)}</div><div className="college-footnote"><TrendingUp /><span>{t.analyticsTip}</span></div></Card></div><section className="sentiment-section"><div className="sentiment-header"><span className="sentiment-icon"><Sparkles /></span><div><span className="eyebrow">{t.aiPowered}</span><h2>{t.sentiment}</h2><p>{t.analyticsFeedback}</p></div><Badge variant="secondary" className="positive-badge"><span />{t.positive}</Badge></div><div className="sentiment-metrics"><div className="sentiment-score"><span>{t.satisfaction}</span><strong>4.8<small>/5</small></strong><span className="rating-stars"><Star /><Star /><Star /><Star /><Star /></span><small>{t.sentimentText}</small></div><div className="sentiment-bars"><span>{t.overall}</span><div className="sentiment-bar-row"><span>{ar ? 'إيجابي' : 'Positive'}</span><div className="sentiment-track"><i style={{ width: '92%' }} /></div><strong>92%</strong></div><div className="sentiment-bar-row"><span>{ar ? 'محايد' : 'Neutral'}</span><div className="sentiment-track neutral-track"><i style={{ width: '6%' }} /></div><strong>6%</strong></div><div className="sentiment-bar-row"><span>{ar ? 'سلبي' : 'Negative'}</span><div className="sentiment-track negative-track"><i style={{ width: '2%' }} /></div><strong>2%</strong></div></div><div className="sentiment-insight"><span><Sparkles /></span><div><strong>{t.smartSummary}</strong><p>{t.analyticsTip}</p></div><ArrowLeft /></div></div></section><div className="analytics-footer"><span><ShieldCheck />{t.privacy}</span><span>{t.dataDemo}</span><button className="text-button">{t.report}<Download /></button></div></div>
 }
 
 function ChatPanel({ t, ar, messages, input, setInput, loading, onSend, onClose }: any) {

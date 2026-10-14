@@ -40,7 +40,15 @@ export async function POST(request: Request) {
       maxOutputTokens: kind === 'description' ? 320 : 240,
     })
     return NextResponse.json({ text: output })
-  } catch {
-    return NextResponse.json({ error: 'The AI assistant is temporarily unavailable.' }, { status: 503 })
+  } catch (error) {
+    const message = `${error instanceof Error ? error.message : ''} ${error instanceof Error && error.cause instanceof Error ? error.cause.message : ''}`.toLowerCase()
+    if (message.includes('valid credit card') || message.includes('customer_verification_required')) {
+      return NextResponse.json({
+        error: isArabic
+          ? 'تحتاج ميزات الذكاء الاصطناعي إلى تفعيل فوترة Vercel AI Gateway. أضيفي وسيلة دفع ثم حاولي مجدداً.'
+          : 'AI features require Vercel AI Gateway billing to be enabled. Add a payment method and try again.',
+      }, { status: 503 })
+    }
+    return NextResponse.json({ error: isArabic ? 'المساعد الذكي غير متاح مؤقتاً. حاولي لاحقاً.' : 'The AI assistant is temporarily unavailable. Please try again.' }, { status: 503 })
   }
 }
