@@ -8,7 +8,7 @@ import {
   CalendarCheck, CalendarDays, ChartNoAxesCombined, Check, CheckCheck,
   ChevronDown, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, Clock3,
   Download, ExternalLink, FileText, Filter, Globe2, GraduationCap, Heart,
-  Languages, LayoutDashboard, Lightbulb, LoaderCircle, MapPin, Megaphone,
+  Languages, LayoutDashboard, Lightbulb, LoaderCircle, LogIn, LogOut, MapPin, Megaphone,
   Menu, MessageCircle, Moon, MoreHorizontal, Plus, QrCode, ScanLine, Search,
   Send, ShieldCheck, Sparkles, Star, Sun, Ticket, TrendingUp, Users, Video,
   WandSparkles, X,
@@ -19,6 +19,8 @@ import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { authClient } from '@/lib/auth/client'
+import type { UserRole } from '@/lib/auth/profile'
 
 type View = 'discover' | 'tickets' | 'create' | 'checkin' | 'attendees' | 'approvals' | 'analytics'
 type Locale = 'ar' | 'en'
@@ -538,7 +540,7 @@ const copy: Record<Locale, Record<string, any>> = {
     assistantLabel: 'مساعد UniEvent',
     numberOf: 'عدد',
     noData: 'لا توجد بيانات إضافية',
-    emailHint: 'البريد الجامعي',
+    emailHint: 'ال��ريد الجامعي',
     information: 'معلومات',
     route: 'عرض الموقع',
     holder: 'رغد أحمد',
@@ -616,7 +618,7 @@ const copy: Record<Locale, Record<string, any>> = {
     eventSuggestion: 'اختيرت لكِ بناء على اهتمامك بالتصميم والتقنية.',
     searchCampus: 'ابحثي عن الفعاليات الجامعية',
     confirmationText: 'تذكرتك بانتظارك.',
-    notificationsEmpty: 'ليس لديكِ إشعارات جديدة',
+    notificationsEmpty: 'ليس لديكِ إش��ارات جديدة',
     identify: 'الرئيسية',
     contact: 'تواصلي معنا',
     cta: 'اكتشفي المزيد',
@@ -781,7 +783,7 @@ const copy: Record<Locale, Record<string, any>> = {
     sampleTitle: 'مؤتمر الذكاء الاصطناعي للطلاب',
     sampleEnglish: 'Student AI Conference',
     sampleOrganizer: 'نادي علوم الحاسب',
-    descriptionText: 'فعالية جامعية ملهمة للطلاب.',
+    descriptionText: 'فعالية جامعية ملهمة للط��اب.',
     step: 'الخطوة',
     mapCampus: 'مخطط الحرم الجامعي',
     waiting: 'بانتظار',
@@ -1266,7 +1268,7 @@ const copy: Record<Locale, Record<string, any>> = {
     writing: 'إنشاء وصف',
     banner: 'أفكارٌ تجمعنا، وتجاربُ تبقى معنا.',
     seeOther: 'اكتشفي بقية الفعاليات.',
-    smartHelp: 'مساعد ذكي لفعاليات الجامعة',
+    smartHelp: 'مساعد ذكي لفعالي��ت الجامعة',
     generatedError: 'تعذّر إنشاء الوصف، حاولي مرة أخرى.',
     campusName: 'جامعة الن��ر',
     entrance: 'البوابة الرئيسية',
@@ -2579,8 +2581,18 @@ const navigation: { id: View; icon: LucideIcon; key: string; role: 'student' | '
   { id: 'analytics', icon: ChartNoAxesCombined, key: 'analytics', role: 'admin' },
 ]
 
-export function UniEventApp() {
+export function UniEventApp({
+  initialUser,
+  initialRole,
+  initialRegistered = [],
+}: {
+  initialUser: { id: string; name: string; email: string } | null
+  initialRole: UserRole | null
+  initialRegistered?: number[]
+}) {
   const { theme, setTheme } = useTheme()
+  const [authUser, setAuthUser] = useState(initialUser)
+  const [authRole, setAuthRole] = useState<UserRole | null>(initialRole)
   const [mounted, setMounted] = useState(false)
   const [view, setView] = useState<View>('discover')
 
@@ -2589,7 +2601,7 @@ export function UniEventApp() {
   const [category, setCategory] = useState('all')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<EventItem | null>(null)
-  const [registered, setRegistered] = useState<number[]>([])
+  const [registered, setRegistered] = useState<number[]>(initialRegistered)
   const [ticketTab, setTicketTab] = useState('upcoming')
   const [chatOpen, setChatOpen] = useState(false)
   const [chatInput, setChatInput] = useState('')
@@ -2601,13 +2613,32 @@ export function UniEventApp() {
   const [rating, setRating] = useState(5)
   const t = copy[locale]
   const ar = locale === 'ar'
-  const role = navigation.find((item) => item.id === view)?.role ?? 'student'
+  const role = authRole ?? 'student'
+  const roleKey = role === 'organizer' ? 'organizerRole' : role === 'admin' ? 'adminRole' : 'studentRole'
+  const visibleNavigation = navigation.filter((item) => {
+    if (item.id === 'discover') return true
+    if (!authUser || !authRole) return false
+    return authRole === 'admin' || item.role === authRole
+  })
 
   const notify = (message: string) => {
     setToast(message)
     window.setTimeout(() => setToast(''), 3000)
   }
   const navigate = (destination: View) => {
+    const destinationRole = navigation.find((item) => item.id === destination)?.role
+    if (destination !== 'discover' && !authUser) {
+      window.location.assign('/auth/sign-in')
+      return
+    }
+    if (destinationRole && authRole && authRole !== 'admin' && destinationRole !== authRole) {
+      notify(ar ? 'هذه الصفحة غير متاحة لدور حسابك.' : 'This page is not available for your account role.')
+      return
+    }
+    if (destination !== 'discover' && authUser && !authRole) {
+      notify(ar ? 'ملف الحساب غير مهيأ بعد.' : 'Your account profile is not configured yet.')
+      return
+    }
     setView(destination)
     setMobileNav(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -2642,9 +2673,73 @@ export function UniEventApp() {
     } finally { setChatLoading(false) }
   }
 
-  function registerEvent(event: EventItem) {
-    setRegistered((current) => current.includes(event.id) ? current : [...current, event.id])
-    notify(t.confirmed)
+  async function registerEvent(event: EventItem) {
+    if (!authUser) {
+      window.location.assign('/auth/sign-in')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: event.id }),
+      })
+      const result = await response.json()
+      if (!response.ok) {
+        notify(ar ? (response.status === 404 ? 'هذه الفعالية غير متاحة للتسجيل حالياً.' : 'تعذر إتمام التسجيل. حاولي مرة أخرى.') : (result.error || 'Unable to complete registration.'))
+        return
+      }
+
+      setRegistered((current) => current.includes(event.id) ? current : [...current, event.id])
+      notify(result.status === 'waitlisted'
+        ? (ar ? 'أُضيف اسمك إلى قائمة الانتظار.' : 'You have been added to the waitlist.')
+        : t.confirmed)
+    } catch {
+      notify(ar ? 'تعذر الاتصال بالخادم. حاولي مرة أخرى.' : 'Unable to reach the server. Please try again.')
+    }
+  }
+
+  async function cancelEvent(event: EventItem) {
+    if (!authUser || !window.confirm(ar ? 'هل تريدين إلغاء هذا التسجيل؟' : 'Cancel this event registration?')) return
+
+    try {
+      const response = await fetch('/api/registrations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: event.id }),
+      })
+      const result = await response.json()
+      if (!response.ok) {
+        notify(ar ? (response.status === 404 ? 'لم يتم العثور على هذا التسجيل.' : 'تعذر إلغاء التسجيل. حاولي مرة أخرى.') : (result.error || 'Unable to cancel registration.'))
+        return
+      }
+
+      setRegistered((current) => current.filter((id) => id !== event.id))
+      notify(ar ? 'تم إلغاء التسجيل.' : 'Registration cancelled.')
+    } catch {
+      notify(ar ? 'تعذر الاتصال بالخادم. حاولي مرة أخرى.' : 'Unable to reach the server. Please try again.')
+    }
+  }
+
+  async function handleAuthAction() {
+    if (!authUser) {
+      window.location.assign('/auth/sign-in')
+      return
+    }
+
+    try {
+      const { error } = await authClient.signOut()
+      if (error) {
+        notify(ar ? 'تعذر تسجيل الخروج. حاولي مرة أخرى.' : 'Unable to sign out. Please try again.')
+        return
+      }
+      setAuthUser(null)
+      setAuthRole(null)
+      window.location.assign('/')
+    } catch {
+      notify(ar ? 'تعذر تسجيل الخروج. حاولي مرة أخرى.' : 'Unable to sign out. Please try again.')
+    }
   }
 
   const pageTitle = navigation.find((item) => item.id === view)
@@ -2652,17 +2747,17 @@ export function UniEventApp() {
     <aside className={`sidebar ${mobileNav ? 'sidebar-open' : ''}`} aria-label={t.navigation}>
       <button className="brand-lockup" onClick={() => navigate('discover')} aria-label="UniEvent"><span className="brand-mark"><GraduationCap /></span><span><strong>UniEvent</strong><small>{t.sidebarSubtitle}</small></span></button>
       <div className="sidebar-label">{t.workspace}</div>
-      <nav className="sidebar-nav">{navigation.map(({ id, icon: Icon, key }) => <button key={id} className={`nav-link ${view === id ? 'nav-link-active' : ''}`} onClick={() => navigate(id)}><Icon /><span>{t[key as keyof typeof t]}</span>{id === 'approvals' && <span className="nav-count">2</span>}</button>)}</nav>
+      <nav className="sidebar-nav">{visibleNavigation.map(({ id, icon: Icon, key }) => <button key={id} className={`nav-link ${view === id ? 'nav-link-active' : ''}`} onClick={() => navigate(id)}><Icon /><span>{t[key as keyof typeof t]}</span>{id === 'approvals' && <span className="nav-count">2</span>}</button>)}</nav>
       <div className="sidebar-spacer" />
       <div className="sidebar-tip"><span className="tip-icon"><Sparkles /></span><strong>{t.aiPowered}</strong><p>{t.smartText}</p></div>
-      <div className="sidebar-footer"><span className="avatar">ر</span><span className="user-meta"><strong>{ar ? 'رغد أحمد' : 'Raghad Ahmed'}</strong><small>{t[role === 'student' ? 'studentRole' : role === 'organizer' ? 'organizerRole' : 'adminRole']}</small></span><button className="icon-button muted-button" aria-label={t.profile}><MoreHorizontal /></button></div>
+      <div className="sidebar-footer"><span className="avatar">{authUser?.name?.charAt(0) || (ar ? 'ط' : 'S')}</span><span className="user-meta"><strong>{authUser?.name || (ar ? 'زائرة' : 'Guest')}</strong><small>{authUser ? t[roleKey] : (ar ? 'استكشاف عام' : 'Public discovery')}</small></span><button className="icon-button muted-button" onClick={handleAuthAction} aria-label={authUser ? (ar ? 'تسجيل الخروج' : 'Sign out') : (ar ? 'تسجيل الدخول' : 'Sign in')}>{authUser ? <LogOut /> : <LogIn />}</button></div>
     </aside>
     {mobileNav && <button className="sidebar-scrim" aria-label={t.close} onClick={() => setMobileNav(false)} />}
     <div className="main-column">
-      <header className="topbar"><div className="topbar-start"><button className="icon-button mobile-menu-button" onClick={() => setMobileNav((open) => !open)} aria-label={t.navigation}><Menu /></button><div className="breadcrumb"><span>UniEvent</span><ChevronLeft /><strong>{t[pageTitle?.key as keyof typeof t] ?? t.home}</strong></div></div><div className="topbar-actions"><label className="header-search"><Search /><input aria-label={t.search} placeholder={t.search} value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') navigate('discover') }} /></label><button className="icon-button" onClick={() => setLocale(ar ? 'en' : 'ar')} aria-label={t.language}><Languages /></button><button className="icon-button" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={t.theme}>{mounted && theme === 'dark' ? <Sun /> : <Moon />}</button><button className="icon-button notification-button" onClick={() => notify(t.notificationEmpty)} aria-label={t.notifications}><Bell /><span /></button><span className="topbar-divider" /><button className="topbar-profile" aria-label={t.myAccount}><span className="avatar avatar-small">ر</span><span className="profile-copy"><strong>{ar ? 'رغد أحمد' : 'Raghad Ahmed'}</strong><small>{t[role === 'student' ? 'studentRole' : role === 'organizer' ? 'organizerRole' : 'adminRole']}</small></span><ChevronDown /></button></div></header>
+      <header className="topbar"><div className="topbar-start"><button className="icon-button mobile-menu-button" onClick={() => setMobileNav((open) => !open)} aria-label={t.navigation}><Menu /></button><div className="breadcrumb"><span>UniEvent</span><ChevronLeft /><strong>{t[pageTitle?.key as keyof typeof t] ?? t.home}</strong></div></div><div className="topbar-actions"><label className="header-search"><Search /><input aria-label={t.search} placeholder={t.search} value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') navigate('discover') }} /></label><button className="icon-button" onClick={() => setLocale(ar ? 'en' : 'ar')} aria-label={t.language}><Languages /></button><button className="icon-button" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={t.theme}>{mounted && theme === 'dark' ? <Sun /> : <Moon />}</button><button className="icon-button notification-button" onClick={() => notify(t.notificationEmpty)} aria-label={t.notifications}><Bell /><span /></button><button className="icon-button auth-header-action" onClick={handleAuthAction} aria-label={authUser ? (ar ? 'تسجيل الخروج' : 'Sign out') : (ar ? 'تسجيل الدخول' : 'Sign in')}>{authUser ? <LogOut /> : <LogIn />}</button><span className="topbar-divider" /><div className="topbar-profile"><span className="avatar avatar-small">{authUser?.name?.charAt(0) || (ar ? 'ط' : 'S')}</span><span className="profile-copy"><strong>{authUser?.name || (ar ? 'زائرة' : 'Guest')}</strong><small>{authUser ? t[roleKey] : (ar ? 'استكشاف عام' : 'Public discovery')}</small></span></div></div></header>
       <main className="main-content" id="main-content">
         {view === 'discover' && <HomePage t={t} ar={ar} search={search} setSearch={setSearch} category={category} setCategory={setCategory} found={filteredEvents} registered={registered} onSelect={setSelected} onRegister={registerEvent} onNavigate={navigate} />}
-        {view === 'tickets' && <TicketsPage t={t} ar={ar} registered={registered} activeTab={ticketTab} setActiveTab={setTicketTab} onRate={setRatingEvent} onToast={notify} onBrowse={() => navigate('discover')} />}
+        {view === 'tickets' && <TicketsPage t={t} ar={ar} registered={registered} activeTab={ticketTab} setActiveTab={setTicketTab} onRate={setRatingEvent} onToast={notify} onCancel={cancelEvent} userName={authUser?.name} onBrowse={() => navigate('discover')} />}
         {view === 'create' && <CreatePage t={t} ar={ar} onToast={notify} generate={(text: string) => requestAI('description', text)} />}
         {view === 'checkin' && <CheckinPage t={t} ar={ar} onToast={notify} />}
         {view === 'attendees' && <AttendeesPage t={t} ar={ar} onToast={notify} />}
@@ -2710,14 +2805,14 @@ function EventDialog({ event, t, ar, registered, onClose, onRegister }: any) {
   const Icon = event.icon
   return <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><section className="event-modal" role="dialog" aria-modal="true" aria-labelledby="event-title"><button className="modal-close" onClick={onClose} aria-label={t.close}><X /></button><div className={`modal-art tone-${event.tone}`}><div className="cover-pattern" /><Icon /><span>{ar ? event.category : event.categoryEn}</span></div><div className="modal-content"><span className="eyebrow"><Sparkles />{t.eventDetails}</span><h2 id="event-title">{ar ? event.title : event.titleEn}</h2><p className="modal-description">{ar ? t.detailsText : 'Meet campus innovators for inspiring discussions, practical sessions, and student-led projects.'}</p><div className="detail-grid"><div><CalendarDays /><span>{ar ? event.date : event.dateEn}<small>{ar ? event.time : '10:00 AM'}</small></span></div><div><MapPin /><span>{ar ? event.place : event.placeEn}<small>{t.mapHint}</small></span></div><div><Users /><span>{event.capacity - event.registered} {t.seats}<small>{event.registered} {t.registeredCount}</small></span></div><div><Building2 /><span>{ar ? 'فريق فعاليات الجامعة' : 'University Events Team'}<small>{t.organizer}</small></span></div></div><div className="map-placeholder"><div className="map-grid"><MapPin /></div><div><strong>{t.campusMap}</strong><span>{ar ? 'مبنى الابتكار، الدور الأرضي' : 'Innovation building · Ground floor'}</span></div><button className="icon-button" aria-label={t.openMap}><ExternalLink /></button></div><button className="button-primary modal-register" onClick={onRegister} disabled={registered}>{registered ? <><CheckCheck />{t.confirmed}</> : <><Ticket />{t.oneClick}</>}</button></div></section></div>
 }
-function TicketsPage({ t, ar, registered, activeTab, setActiveTab, onRate, onToast, onBrowse }: any) {
+function TicketsPage({ t, ar, registered, activeTab, setActiveTab, onRate, onToast, onCancel, userName, onBrowse }: any) {
   const upcoming = events.filter((event) => registered.includes(event.id))
   const past = [events[1]]
-  return <div className="page-stack"><PageHeader eyebrow={t.studentRole} title={t.ticketsTitle} description={t.ticketsHint} /><div className="ticket-summary-row"><Summary icon={Ticket} number={ar ? String(upcoming.length).padStart(2, '0') : String(upcoming.length)} label={t.upcomingTickets} /><Summary icon={FileText} number={ar ? '٠١' : '01'} label={t.certificates} /><Summary icon={Star} number={ar ? '٠٣' : '03'} label={t.attendedEvents} /></div><Tabs value={activeTab} onValueChange={setActiveTab}><TabsList className="page-tabs"><TabsTrigger value="upcoming">{t.upcoming}<span>{upcoming.length}</span></TabsTrigger><TabsTrigger value="past">{t.past}<span>1</span></TabsTrigger></TabsList><TabsContent value="upcoming" className="ticket-list">{upcoming.length ? upcoming.map((event) => <TicketCard key={event.id} event={event} t={t} ar={ar} onToast={onToast} />) : <div className="empty-state ticket-empty"><span className="empty-art"><Ticket /></span><strong>{t.noTickets}</strong><span>{t.ticketsHint}</span><button className="button-primary" onClick={onBrowse}>{t.browse}<ArrowLeft /></button></div>}</TabsContent><TabsContent value="past" className="ticket-list"><PastEvent event={past[0]} t={t} ar={ar} onRate={() => onRate(past[0])} onToast={onToast} /></TabsContent></Tabs><div className="certificate-note"><span><ShieldCheck /></span><div><strong>{t.qrValid}</strong><p>{t.qrInstructions}</p></div></div></div>
+  return <div className="page-stack"><PageHeader eyebrow={t.studentRole} title={t.ticketsTitle} description={t.ticketsHint} /><div className="ticket-summary-row"><Summary icon={Ticket} number={ar ? String(upcoming.length).padStart(2, '0') : String(upcoming.length)} label={t.upcomingTickets} /><Summary icon={FileText} number={ar ? '٠١' : '01'} label={t.certificates} /><Summary icon={Star} number={ar ? '٠٣' : '03'} label={t.attendedEvents} /></div><Tabs value={activeTab} onValueChange={setActiveTab}><TabsList className="page-tabs"><TabsTrigger value="upcoming">{t.upcoming}<span>{upcoming.length}</span></TabsTrigger><TabsTrigger value="past">{t.past}<span>1</span></TabsTrigger></TabsList><TabsContent value="upcoming" className="ticket-list">{upcoming.length ? upcoming.map((event) => <TicketCard key={event.id} event={event} t={t} ar={ar} userName={userName} onToast={onToast} onCancel={() => onCancel(event)} />) : <div className="empty-state ticket-empty"><span className="empty-art"><Ticket /></span><strong>{t.noTickets}</strong><span>{t.ticketsHint}</span><button className="button-primary" onClick={onBrowse}>{t.browse}<ArrowLeft /></button></div>}</TabsContent><TabsContent value="past" className="ticket-list"><PastEvent event={past[0]} t={t} ar={ar} onRate={() => onRate(past[0])} onToast={onToast} /></TabsContent></Tabs><div className="certificate-note"><span><ShieldCheck /></span><div><strong>{t.qrValid}</strong><p>{t.qrInstructions}</p></div></div></div>
 }
 function Summary({ icon: Icon, number, label }: { icon: LucideIcon; number: string; label: string }) { return <div className="ticket-summary-card"><Icon /><strong>{number}</strong><span>{label}</span></div> }
-function TicketCard({ event, t, ar, onToast }: any) {
-  return <Card className="digital-ticket"><div className={`ticket-colorbar tone-${event.tone}`} /><div className="ticket-main"><div className="ticket-heading"><span className="ticket-status"><span />{t.registrationOpen}</span><span className="ticket-code">UE-2048</span></div><h3>{ar ? event.title : event.titleEn}</h3><div className="ticket-meta"><span><CalendarDays />{ar ? event.date : event.dateEn}</span><span><Clock3 />{ar ? event.time : '10:00 AM'}</span><span><MapPin />{ar ? event.place : event.placeEn}</span></div><div className="ticket-perforation"><span /><i /><span /></div><div className="ticket-footer"><div className="ticket-owner"><span className="avatar avatar-small">ر</span><span><small>{t.student}</small><strong>{ar ? 'رغد أحمد' : 'Raghad Ahmed'}</strong></span></div><div><small>{t.studentId}</small><strong>2024012048</strong></div><button className="button-outline" onClick={() => onToast(t.downloaded)}><Download />{t.download}</button></div></div><div className="ticket-qr"><QRCodeSVG value={`unievent://ticket/UE-2048/${event.id}`} size={112} level="M" includeMargin fgColor="#1e3a8a" bgColor="transparent" /><span>{t.qrValid}</span></div></Card>
+function TicketCard({ event, t, ar, userName, onToast, onCancel }: any) {
+  return <Card className="digital-ticket"><div className={`ticket-colorbar tone-${event.tone}`} /><div className="ticket-main"><div className="ticket-heading"><span className="ticket-status"><span />{t.registrationOpen}</span><span className="ticket-code">UE-2048</span></div><h3>{ar ? event.title : event.titleEn}</h3><div className="ticket-meta"><span><CalendarDays />{ar ? event.date : event.dateEn}</span><span><Clock3 />{ar ? event.time : '10:00 AM'}</span><span><MapPin />{ar ? event.place : event.placeEn}</span></div><div className="ticket-perforation"><span /><i /><span /></div><div className="ticket-footer"><div className="ticket-owner"><span className="avatar avatar-small">{ar ? 'ط' : 'S'}</span><span><small>{t.student}</small><strong>{userName || (ar ? 'طالبة' : 'Student')}</strong></span></div><div><small>{t.studentId}</small><strong>—</strong></div><button className="button-outline" onClick={() => onToast(t.downloaded)}><Download />{t.download}</button><button className="button-outline" onClick={onCancel}><X />{t.cancel}</button></div></div><div className="ticket-qr"><QRCodeSVG value={`unievent://ticket/UE-2048/${event.id}`} size={112} level="M" includeMargin fgColor="#1e3a8a" bgColor="transparent" /><span>{t.qrValid}</span></div></Card>
 }
 function PastEvent({ event, t, ar, onRate, onToast }: any) { return <Card className="past-event-card"><span className="past-event-icon"><FileText /></span><div className="past-event-copy"><span className="eyebrow">{t.attendedEvents}</span><h3>{ar ? 'هاكاثون الحلول المستدامة' : 'Sustainable Solutions Hackathon'}</h3><p><CalendarDays />{ar ? '١٥ سبتمبر ٢٠٢٦' : 'Sep 15, 2026'}<i /><Star />{t.noRatings}</p></div><div className="past-event-actions"><button className="button-outline" onClick={() => onToast(t.downloaded)}><Download />{t.download}</button><button className="button-primary" onClick={onRate}><Star />{t.rate}</button></div></Card> }
 function RatingDialog({ event, t, ar, rating, setRating, onClose, onSubmit }: any) { return <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}><section className="rating-modal" role="dialog" aria-modal="true" aria-labelledby="rating-title"><button className="modal-close" onClick={onClose} aria-label={t.close}><X /></button><div className="rating-modal-icon"><Heart /></div><span className="eyebrow">{t.feedback}</span><h2 id="rating-title">{t.rate}</h2><p>{ar ? event.title : event.titleEn}</p><div className="rating-picker" role="radiogroup" aria-label={t.rating}>{[1,2,3,4,5].map((value) => <button key={value} role="radio" aria-checked={rating === value} aria-label={`${value} ${t.stars}`} className={value <= rating ? 'star-selected' : ''} onClick={() => setRating(value)}><Star fill="currentColor" /></button>)}</div><label className="form-field"><span>{t.feedback}</span><textarea placeholder={t.feedbackPrompt} rows={3} /></label><button className="button-primary rating-submit" onClick={onSubmit}><Send />{t.sendRating}</button></section></div> }
