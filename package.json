@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/react": "^4.0.141",
     "@base-ui/react": "^1.5.0",
+    "@neondatabase/auth": "0.7.0-beta",
     "@vercel/analytics": "1.6.1",
     "ai": "^7.0.138",
     "class-variance-authority": "^0.7.1",
